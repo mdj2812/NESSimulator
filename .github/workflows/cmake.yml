@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: upgrade G++
+      run: |
+           sudo apt update
+           sudo apt install gcc-9 g++-9
+    
     - name: Install X11-dev
       run: sudo apt-get install libx11-dev
       
@@ -46,6 +51,9 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
+      env:
+       CC:   gcc-10
+       CXX:  g++-10
 
     - name: Test
       working-directory: ${{github.workspace}}/build
