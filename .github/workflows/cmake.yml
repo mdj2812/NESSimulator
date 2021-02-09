@@ -15,6 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install X11-dev
+      run: sudo apt-get install libx11-dev
+      
+    - name: Install opengl
+      run: sudo apt-get install libglu1-mesa-dev libgl1-mesa-dev freeglut3-dev mesa-common-dev
+
+    - name: Install png-dev
+      run: sudo apt-get install libpng-dev
+
     - uses: actions/checkout@v2
 
     - name: Create Build Environment
