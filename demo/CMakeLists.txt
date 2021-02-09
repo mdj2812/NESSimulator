@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(NESSimulator VERSION 0.1.0)
-
 # OpenGL
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
