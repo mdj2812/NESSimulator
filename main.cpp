@@ -1,4 +1,4 @@
-#include "m6502.h"
+#include "Bus.h"
 
 int main(int argc, char const *argv[]) {
   /* code */
