@@ -11,7 +11,7 @@ class Bus;
 class m6502 {
 public:
   m6502() {}
-  ~m6502() {}
+  ~m6502() { bus.release(); }
 
   // External event functions
   void clock() {
