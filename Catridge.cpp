@@ -17,8 +17,7 @@ Catridge::Catridge(const string &sFileName) {
     char unused[5];
   } header;
 
-  std::ifstream ifs;
-  ifs.open(sFileName, ifstream::binary);
+  std::ifstream ifs(sFileName, ifstream::binary);
   if (ifs.is_open()) {
     ifs.read((char *)&header, sizeof(sHeader));
 
@@ -40,7 +39,11 @@ Catridge::Catridge(const string &sFileName) {
       ifs.read((char *)vPRGMemory.data(), vPRGMemory.size());
 
       nCHRBanks = header.chr_rom_chunks;
-      vCHRMemory.resize(nCHRBanks * 8192); // nPRGBanks * 8 KB
+      if (nCHRBanks == 0) {
+        vCHRMemory.resize(8192); // 8 KB
+      } else {
+        vCHRMemory.resize(nCHRBanks * 8192); // nPRGBanks * 8 KB
+      }
       ifs.read((char *)vCHRMemory.data(), vCHRMemory.size());
     }
 
@@ -56,7 +59,5 @@ Catridge::Catridge(const string &sFileName) {
     }
 
     bImageValid = true;
-
-    ifs.close();
   }
 }

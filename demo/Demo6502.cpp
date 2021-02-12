@@ -18,6 +18,8 @@ public:
   bool bEmulationRun{false};
   float fResidualTime{0.0f};
 
+  uint8_t nSelectedPalette{0x00u};
+
   string hex(uint32_t n, uint8_t d) {
     string s(d, '0');
     for (int i = d - 1; i >= 0; i--, n >>= 4)
@@ -109,6 +111,16 @@ public:
   bool OnUserUpdate(float fElapsedTime) {
     Clear(olc::DARK_BLUE);
 
+    if (GetKey(olc::Key::R).bPressed) {
+      nes.cpu.reset();
+    }
+    if (GetKey(olc::Key::SPACE).bPressed) {
+      bEmulationRun = !bEmulationRun;
+    }
+    if (GetKey(olc::Key::P).bPressed) {
+      (++nSelectedPalette) &= 0x07u;
+    }
+
     if (bEmulationRun) {
       if (fResidualTime > 0.0f) {
         fResidualTime -= fElapsedTime;
@@ -146,16 +158,25 @@ public:
         nes.ppu.frameComplete = false;
       }
     }
-    if (GetKey(olc::Key::R).bPressed) {
-      nes.cpu.reset();
-    }
-    if (GetKey(olc::Key::SPACE).bPressed) {
-      bEmulationRun = !bEmulationRun;
-    }
 
     // Draw Ram Page 0x00
     DrawCpu(516, 2);
     DrawCode(516, 72, 26);
+
+    constexpr int nSwatchSize = 6;
+    for (int p = 0; p < 8; p++) {
+      for (int s = 0; s < 4; s++) {
+        FillRect(516 + p * (nSwatchSize * 5) + s * nSwatchSize, 340,
+                 nSwatchSize, nSwatchSize,
+                 nes.ppu.GetColourFromPaletteRam(p, s));
+      }
+    }
+
+    DrawRect(516 + nSelectedPalette * (nSwatchSize * 5) - 1, 339,
+             (nSwatchSize * 4), nSwatchSize, olc::WHITE);
+
+    DrawSprite(516, 348, &nes.ppu.GetPatternTable(0, nSelectedPalette));
+    DrawSprite(648, 348, &nes.ppu.GetPatternTable(1, nSelectedPalette));
 
     DrawSprite(0, 0, &nes.ppu.GetScreen(), 2);
 

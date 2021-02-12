@@ -25,16 +25,19 @@ public:
     return false;
   }
   virtual bool ppuMapRead(uint16_t addr, uint32_t &mappedAddr) {
-    if (addr >= 0x8000u && addr <= 0x1FFFu) {
+    if (addr >= 0x0000u && addr <= 0x1FFFu) {
       mappedAddr = addr;
       return true;
     }
     return false;
   }
-  virtual bool ppuMapWrite(uint16_t addr, const uint32_t &mappedAddr) {
-    // if (addr >= 0x8000u && addr <= 0x1FFFu) {
-    //   return true;
-    // }
+  virtual bool ppuMapWrite(uint16_t addr, uint32_t &mappedAddr) {
+    if (addr >= 0x0000u && addr <= 0x1FFFu) {
+      if (nCHRBanks == 0) {
+        mappedAddr = addr;
+        return true;
+      }
+    }
     return false;
   }
 };
