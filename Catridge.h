@@ -13,6 +13,14 @@ public:
   Catridge(const std::string &sFileName);
   ~Catridge() {}
 
+  enum MIRROR
+  {
+    HORIZONTAL,
+    VERTICAL,
+    ONESCREEN_LO,
+    ONESCREEN_HI
+  } mirror = HORIZONTAL;
+
   bool ImageValid() const { return bImageValid; }
 
   bool cpuRead(uint16_t addr, uint8_t &data) const

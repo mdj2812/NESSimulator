@@ -14,211 +14,16 @@ public:
   m2C02();
   ~m2C02() {}
 
-  uint8_t cpuRead(uint16_t addr, bool bReadOnly = false) const
-  {
-    uint8_t data = 0x00u;
-    if (bReadOnly)
-    {
-      switch (addr)
-      {
-      case 0x0000u: // Control
-        data = control.reg;
-        break;
-      case 0x0001u: // Mask
-        data = mask.reg;
-        break;
-      case 0x0002u: // Status
-        data = status.reg;
-        break;
-      case 0x0003u: // OAM Address
-        break;
-      case 0x0004u: // OAM Data
-        break;
-      case 0x0005u: // Scroll
-        break;
-      case 0x0006u: // PPU Address
-        break;
-      case 0x0007u: // PPU Data
-        break;
-      default:
-        break;
-      }
-    }
-    else
-    {
-      switch (addr)
-      {
-      case 0x0000u: // Control
-        break;
-      case 0x0001u: // Mask
-        break;
-      case 0x0002u: // Status
-        status.vertical_blank = 1;
-        data = (status.reg & 0xE0u) | (ppuDataBuffer & 0x1Fu);
-        status.vertical_blank = 0;
-        addressLatch = 0;
-        break;
-      case 0x0003u: // OAM Address
-        break;
-      case 0x0004u: // OAM Data
-        break;
-      case 0x0005u: // Scroll
-        break;
-      case 0x0006u: // PPU Address
-        break;
-      case 0x0007u: // PPU Data
-        data = ppuDataBuffer;
-        ppuDataBuffer = ppuRead(ppuAddress);
-
-        if (ppuAddress++ > 0x3F00u)
-        {
-          data = ppuDataBuffer;
-        }
-        break;
-      default:
-        break;
-      }
-    }
-
-    return data;
-  }
-  void cpuWrite(uint16_t addr, uint8_t data)
-  {
-    switch (addr)
-    {
-    case 0x0000u: // Control
-      control.reg = data;
-      break;
-    case 0x0001u: // Mask
-      mask.reg = data;
-      break;
-    case 0x0002u: // Status
-      break;
-    case 0x0003u: // OAM Address
-      break;
-    case 0x0004u: // OAM Data
-      break;
-    case 0x0005u: // Scroll
-      break;
-    case 0x0006u: // PPU Address
-      if (addressLatch == 0)
-      {
-        ppuAddress = (ppuAddress & 0x00FFu) | (data << 8);
-        addressLatch = 1;
-      }
-      else
-      {
-        ppuAddress = (ppuAddress & 0xFF00u) | data;
-        addressLatch = 0;
-      }
-      break;
-    case 0x0007u: // PPU Data
-      ppuWrite(ppuAddress++, data);
-      break;
-    default:
-      break;
-    }
-  }
-
-  uint8_t ppuRead(uint16_t addr, bool bReadOnly = false) const
-  {
-    uint8_t data = 0x00u;
-    addr &= 0x3FFFu;
-
-    if (cart->ppuRead(addr, data))
-    {
-    }
-    else if (addr >= 0x0000u && addr <= 0x1FFFu)
-    {
-      data = tblPattern[(addr & 0x1000u) >> 12][addr & 0x0FFFu];
-    }
-    else if (addr >= 0x2000u && addr <= 0x3EFFu)
-    {
-    }
-    else if (addr >= 0x3F00u && addr <= 0x3FFFu)
-    {
-      addr &= 0x001Fu;
-      switch (addr)
-      {
-      case 0x0010u:
-        addr = 0x0000u;
-        break;
-      case 0x0014u:
-        addr = 0x0004u;
-        break;
-      case 0x0018u:
-        addr = 0x0008u;
-        break;
-      case 0x001Cu:
-        addr = 0x000Cu;
-        break;
-      default:
-        break;
-      }
-      data = tblPalette[addr];
-    }
-
-    return data;
-  }
-  void ppuWrite(uint16_t addr, uint8_t data)
-  {
-    addr &= 0x3FFFu;
-    if (cart->ppuWrite(addr, data))
-    {
-    }
-    else if (addr >= 0x0000u && addr <= 0x1FFFu)
-    {
-      tblPattern[(addr & 0x1000u) >> 12][addr & 0x0FFFu] = data;
-    }
-    else if (addr >= 0x2000u && addr <= 0x3EFFu)
-    {
-    }
-    else if (addr >= 0x3F00u && addr <= 0x3FFFu)
-    {
-      addr &= 0x001Fu;
-      switch (addr)
-      {
-      case 0x0010u:
-        addr = 0x0000u;
-        break;
-      case 0x0014u:
-        addr = 0x0004u;
-        break;
-      case 0x0018u:
-        addr = 0x0008u;
-        break;
-      case 0x001Cu:
-        addr = 0x000Cu;
-        break;
-      default:
-        break;
-      }
-      tblPalette[addr] = data;
-    }
-  }
+  uint8_t cpuRead(uint16_t addr, bool bReadOnly = false) const;
+  void cpuWrite(uint16_t addr, uint8_t data);
+  uint8_t ppuRead(uint16_t addr, bool bReadOnly = false) const;
+  void ppuWrite(uint16_t addr, uint8_t data);
 
   void ConnectCartridge(const std::shared_ptr<Catridge> &catridge)
   {
     cart = catridge;
   }
-  void clock()
-  {
-    // Fake some noise
-    sprScreen.SetPixel(cycle - 1, scanline,
-                       palScreen[(rand() % 2) ? 0x3F : 0x30]);
-
-    ++cycle;
-    if (cycle >= 341)
-    {
-      cycle = 0;
-      ++scanline;
-      if (scanline >= 261)
-      {
-        scanline = -1;
-        frameComplete = true;
-      }
-    }
-  }
+  void clock();
 
   // Debugging Utilities
   olc::Sprite &GetScreen() { return sprScreen; }
@@ -257,10 +62,12 @@ public:
   }
 
   bool frameComplete{false};
+  bool nmi{false};
+
+  std::array<std::array<uint8_t, 1024>, 2> tblName;
 
 private:
   std::shared_ptr<Catridge> cart;
-  std::array<std::array<uint8_t, 1024>, 2> tblName;
   std::array<uint8_t, 32> tblPalette;
   // TODO: Javid Future
   std::array<std::array<uint8_t, 4096>, 2> tblPattern;
@@ -319,7 +126,36 @@ private:
     uint8_t reg;
   } control;
 
+  // Loopy Register, refer to https://wiki.nesdev.com/w/index.php/PPU_scrolling
+  union loopyRegister
+  {
+    struct
+    {
+      uint16_t coarse_x : 5;
+      uint16_t coarse_y : 5;
+      uint16_t nametable_x : 1;
+      uint16_t nametable_y : 1;
+      uint16_t fine_y : 3;
+      uint16_t unused : 1;
+    };
+    uint16_t reg = 0x0000u;
+  };
+
   mutable uint8_t addressLatch{0x00u};
   mutable uint8_t ppuDataBuffer{0x00u};
-  mutable uint16_t ppuAddress{0x0000u};
+
+  mutable loopyRegister vramAddr;
+  mutable loopyRegister tramAddr;
+
+  uint8_t fineX{0x00u};
+
+  uint8_t bgNextTileId{0x00u};
+  uint8_t bgNextTileAttrib{0x00u};
+  uint8_t bgNextTileLsb{0x00u};
+  uint8_t bgNextTileMsb{0x00u};
+
+  uint16_t bgShifterPatternLo{0x0000u};
+  uint16_t bgShifterPatternHi{0x0000u};
+  uint16_t bgShifterAttribLo{0x0000u};
+  uint16_t bgShifterAttribHi{0x0000u};
 };

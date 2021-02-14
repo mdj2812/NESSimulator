@@ -30,6 +30,7 @@ Catridge::Catridge(const string &sFileName)
     }
 
     nMapperID = ((header.mapper2 >> 4) << 4) | (header.mapper1 >> 4);
+    mirror = (header.mapper1 & 0x01u) ? VERTICAL : HORIZONTAL;
 
     // "Discover" File format
     uint8_t nFileType = 1;
