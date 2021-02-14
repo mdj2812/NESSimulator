@@ -8,15 +8,19 @@
 
 #include "olcPixelGameEngine.h"
 
-class m2C02 {
+class m2C02
+{
 public:
   m2C02();
   ~m2C02() {}
 
-  uint8_t cpuRead(uint16_t addr, bool bReadOnly = false) const {
+  uint8_t cpuRead(uint16_t addr, bool bReadOnly = false) const
+  {
     uint8_t data = 0x00u;
-    if (bReadOnly) {
-      switch (addr) {
+    if (bReadOnly)
+    {
+      switch (addr)
+      {
       case 0x0000u: // Control
         data = control.reg;
         break;
@@ -39,8 +43,11 @@ public:
       default:
         break;
       }
-    } else {
-      switch (addr) {
+    }
+    else
+    {
+      switch (addr)
+      {
       case 0x0000u: // Control
         break;
       case 0x0001u: // Mask
@@ -63,7 +70,8 @@ public:
         data = ppuDataBuffer;
         ppuDataBuffer = ppuRead(ppuAddress);
 
-        if (ppuAddress++ > 0x3F00u) {
+        if (ppuAddress++ > 0x3F00u)
+        {
           data = ppuDataBuffer;
         }
         break;
@@ -74,8 +82,10 @@ public:
 
     return data;
   }
-  void cpuWrite(uint16_t addr, uint8_t data) {
-    switch (addr) {
+  void cpuWrite(uint16_t addr, uint8_t data)
+  {
+    switch (addr)
+    {
     case 0x0000u: // Control
       control.reg = data;
       break;
@@ -91,10 +101,13 @@ public:
     case 0x0005u: // Scroll
       break;
     case 0x0006u: // PPU Address
-      if (addressLatch == 0) {
+      if (addressLatch == 0)
+      {
         ppuAddress = (ppuAddress & 0x00FFu) | (data << 8);
         addressLatch = 1;
-      } else {
+      }
+      else
+      {
         ppuAddress = (ppuAddress & 0xFF00u) | data;
         addressLatch = 0;
       }
@@ -107,18 +120,26 @@ public:
     }
   }
 
-  uint8_t ppuRead(uint16_t addr, bool bReadOnly = false) const {
+  uint8_t ppuRead(uint16_t addr, bool bReadOnly = false) const
+  {
     uint8_t data = 0x00u;
     addr &= 0x3FFFu;
 
-    if (cart->ppuRead(addr, data)) {
-
-    } else if (addr >= 0x0000u && addr <= 0x1FFFu) {
+    if (cart->ppuRead(addr, data))
+    {
+    }
+    else if (addr >= 0x0000u && addr <= 0x1FFFu)
+    {
       data = tblPattern[(addr & 0x1000u) >> 12][addr & 0x0FFFu];
-    } else if (addr >= 0x2000u && addr <= 0x3EFFu) {
-    } else if (addr >= 0x3F00u && addr <= 0x3FFFu) {
+    }
+    else if (addr >= 0x2000u && addr <= 0x3EFFu)
+    {
+    }
+    else if (addr >= 0x3F00u && addr <= 0x3FFFu)
+    {
       addr &= 0x001Fu;
-      switch (addr) {
+      switch (addr)
+      {
       case 0x0010u:
         addr = 0x0000u;
         break;
@@ -139,15 +160,24 @@ public:
 
     return data;
   }
-  void ppuWrite(uint16_t addr, uint8_t data) {
+  void ppuWrite(uint16_t addr, uint8_t data)
+  {
     addr &= 0x3FFFu;
-    if (cart->ppuWrite(addr, data)) {
-    } else if (addr >= 0x0000u && addr <= 0x1FFFu) {
+    if (cart->ppuWrite(addr, data))
+    {
+    }
+    else if (addr >= 0x0000u && addr <= 0x1FFFu)
+    {
       tblPattern[(addr & 0x1000u) >> 12][addr & 0x0FFFu] = data;
-    } else if (addr >= 0x2000u && addr <= 0x3EFFu) {
-    } else if (addr >= 0x3F00u && addr <= 0x3FFFu) {
+    }
+    else if (addr >= 0x2000u && addr <= 0x3EFFu)
+    {
+    }
+    else if (addr >= 0x3F00u && addr <= 0x3FFFu)
+    {
       addr &= 0x001Fu;
-      switch (addr) {
+      switch (addr)
+      {
       case 0x0010u:
         addr = 0x0000u;
         break;
@@ -167,19 +197,23 @@ public:
     }
   }
 
-  void ConnectCartridge(const std::shared_ptr<Catridge> &catridge) {
+  void ConnectCartridge(const std::shared_ptr<Catridge> &catridge)
+  {
     cart = catridge;
   }
-  void clock() {
+  void clock()
+  {
     // Fake some noise
     sprScreen.SetPixel(cycle - 1, scanline,
                        palScreen[(rand() % 2) ? 0x3F : 0x30]);
 
     ++cycle;
-    if (cycle >= 341) {
+    if (cycle >= 341)
+    {
       cycle = 0;
       ++scanline;
-      if (scanline >= 261) {
+      if (scanline >= 261)
+      {
         scanline = -1;
         frameComplete = true;
       }
@@ -189,16 +223,21 @@ public:
   // Debugging Utilities
   olc::Sprite &GetScreen() { return sprScreen; }
   olc::Sprite &GetNameTabel(uint8_t i) { return sprNameTable[i]; }
-  olc::Sprite &GetPatternTable(uint8_t i, uint8_t palette) {
-    for (uint16_t nTileY = 0; nTileY < 16; nTileY++) {
-      for (uint16_t nTileX = 0; nTileX < 16; nTileX++) {
+  olc::Sprite &GetPatternTable(uint8_t i, uint8_t palette)
+  {
+    for (uint16_t nTileY = 0; nTileY < 16; nTileY++)
+    {
+      for (uint16_t nTileX = 0; nTileX < 16; nTileX++)
+      {
         uint16_t nOffset = nTileY * 256 + nTileX * 16;
 
-        for (uint16_t row = 0; row < 8; row++) {
+        for (uint16_t row = 0; row < 8; row++)
+        {
           uint8_t tileLsb = ppuRead(i * 0x1000u + nOffset + row + 0);
           uint8_t tileMsb = ppuRead(i * 0x1000u + nOffset + row + 8);
 
-          for (uint16_t col = 0; col < 8; col++) {
+          for (uint16_t col = 0; col < 8; col++)
+          {
             uint8_t pixel = (tileLsb & 0x01u) + (tileMsb & 0x01u);
             tileLsb >>= 1;
             tileMsb >>= 1;
@@ -212,7 +251,8 @@ public:
 
     return sprPatternTable[i];
   }
-  olc::Pixel &GetColourFromPaletteRam(uint8_t palette, uint8_t pixel) {
+  olc::Pixel &GetColourFromPaletteRam(uint8_t palette, uint8_t pixel)
+  {
     return palScreen[ppuRead(0x3F00 + (palette << 2) + pixel) & 0x3F];
   }
 
@@ -235,8 +275,10 @@ private:
   int16_t scanline{0};
   int16_t cycle{0};
 
-  union {
-    struct {
+  union
+  {
+    struct
+    {
       uint8_t unused : 5;
       uint8_t sprite_overflow : 1;
       uint8_t sprite_zero_hit : 1;
@@ -245,8 +287,10 @@ private:
     uint8_t reg;
   } status;
 
-  union {
-    struct {
+  union
+  {
+    struct
+    {
       uint8_t grayscale : 1;
       uint8_t render_background_left : 1;
       uint8_t render_sprites_left : 1;
@@ -259,8 +303,10 @@ private:
     uint8_t reg;
   } mask;
 
-  union PPUCTRL {
-    struct {
+  union PPUCTRL
+  {
+    struct
+    {
       uint8_t nametable_x : 1;
       uint8_t nametable_y : 1;
       uint8_t increment_mode : 1;

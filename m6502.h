@@ -8,14 +8,17 @@
 
 class Bus;
 
-class m6502 {
+class m6502
+{
 public:
   m6502() {}
   ~m6502() { bus.release(); }
 
   // External event functions
-  void clock() {
-    if (cycles == 0) {
+  void clock()
+  {
+    if (cycles == 0)
+    {
       opcode = read(pc++);
       SetFlag(U, true);
 
@@ -30,7 +33,8 @@ public:
 
     cycles--;
   }
-  void reset() {
+  void reset()
+  {
     a = x = y = 0;
     stackPointer = 0xFDu;
     status = 0x00 | U;
@@ -46,8 +50,10 @@ public:
 
     cycles = 8;
   }
-  void irq() {
-    if (GetFlag(I) == 0) {
+  void irq()
+  {
+    if (GetFlag(I) == 0)
+    {
       write(0x0100u + stackPointer, (pc >> 8) & 0x00FFu);
       --stackPointer;
       write(0x0100u + stackPointer, pc & 0x00FFu);
@@ -67,8 +73,10 @@ public:
       cycles = 7;
     }
   }
-  void nmi() {
-    if (GetFlag(I) == 0) {
+  void nmi()
+  {
+    if (GetFlag(I) == 0)
+    {
       write(0x0100u + stackPointer, (pc >> 8) & 0x00FFu);
       --stackPointer;
       write(0x0100u + stackPointer, pc & 0x00FFu);
@@ -93,7 +101,8 @@ public:
 
   void ConnectBus(Bus *busPtr) { bus.reset(busPtr); }
 
-  enum FLAGS_6502 {
+  enum FLAGS_6502
+  {
     C = (1 << 0), // Carry Flag
     Z = (1 << 1), // Zero Flag
     I = (1 << 2), // Interrupt Flag
@@ -105,88 +114,107 @@ public:
   };
 
   // Addressing Modes
-  uint8_t IMP() {
+  uint8_t IMP()
+  {
     fetched = a;
     return 0;
   }
-  uint8_t IMM() {
+  uint8_t IMM()
+  {
     addrAbs = pc++;
     return 0;
   }
-  uint8_t ZP0() {
+  uint8_t ZP0()
+  {
     addrAbs = read(pc++);
     addrAbs &= 0x00FFu;
     return 0;
   }
-  uint8_t ZPX() {
+  uint8_t ZPX()
+  {
     addrAbs = read(pc++) + x;
     addrAbs &= 0x00FFu;
     return 0;
   }
-  uint8_t ZPY() {
+  uint8_t ZPY()
+  {
     addrAbs = read(pc++) + y;
     addrAbs &= 0x00FFu;
     return 0;
   }
-  uint8_t REL() {
+  uint8_t REL()
+  {
     addrRel = read(pc++);
-    if (addrRel & 0x80) {
+    if (addrRel & 0x80)
+    {
       addrRel |= 0xFF00;
     }
     return 0;
   }
-  uint8_t ABS() {
+  uint8_t ABS()
+  {
     uint16_t lo = read(pc++);
     uint16_t hi = read(pc++);
     addrAbs = (hi << 8) | lo;
     return 0;
   }
-  uint8_t ABX() {
+  uint8_t ABX()
+  {
     uint16_t lo = read(pc++);
     uint16_t hi = read(pc++);
     addrAbs = ((hi << 8) | lo) + x;
     // if page changed, need an additional clock cycle
-    if ((addrAbs & 0xFF00u) != (hi << 8)) {
+    if ((addrAbs & 0xFF00u) != (hi << 8))
+    {
       return 1;
     }
     return 0;
   }
-  uint8_t ABY() {
+  uint8_t ABY()
+  {
     uint16_t lo = read(pc++);
     uint16_t hi = read(pc++);
     addrAbs = ((hi << 8) | lo) + y;
     // if page changed, need an additional clock cycle
-    if ((addrAbs & 0xFF00u) != (hi << 8)) {
+    if ((addrAbs & 0xFF00u) != (hi << 8))
+    {
       return 1;
     }
     return 0;
   }
-  uint8_t IND() {
+  uint8_t IND()
+  {
     uint16_t ptrLo = read(pc++);
     uint16_t ptrHi = read(pc++);
     uint16_t ptr = (ptrHi << 8) | ptrLo;
     // simulate page boundary hardware bug
-    if (ptrLo == 0x00FFu) {
+    if (ptrLo == 0x00FFu)
+    {
       // ignore this bug by remain in same page
       addrAbs = (read(ptr & 0xFF00u) << 8) | read(ptr);
-    } else {
+    }
+    else
+    {
       addrAbs = (read(ptr + 1) << 8) | read(ptr);
     }
     return 0;
   }
-  uint8_t IZX() {
+  uint8_t IZX()
+  {
     uint16_t t = read(pc++);
     uint16_t lo = read((uint16_t)(t + (uint16_t)x) & 0x00FFu);
     uint16_t hi = read((uint16_t)(t + (uint16_t)x + 1) & 0x00FFu);
     addrAbs = (hi << 8) | lo;
     return 0;
   }
-  uint8_t IZY() {
+  uint8_t IZY()
+  {
     uint16_t t = read(pc++);
     uint16_t lo = read(t & 0x00FFu);
     uint16_t hi = read((t + 1) & 0x00FFu);
     addrAbs = ((hi << 8) | lo) + y;
-    if ((addrAbs & 0xFF00u) != (hi << 8)) {
+    if ((addrAbs & 0xFF00u) != (hi << 8))
+    {
       return 1;
     }
     return 0;
@@ -198,120 +226,140 @@ public:
    *
    * @return uint8_t additional cycles required
    */
-  uint8_t LDA() {
+  uint8_t LDA()
+  {
     fetch();
     a = fetched;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 1;
   }
-  uint8_t LDX() {
+  uint8_t LDX()
+  {
     fetch();
     x = fetched;
     SetFlag(Z, x == 0x00u);
     SetFlag(N, x & 0x80u);
     return 1;
   }
-  uint8_t LDY() {
+  uint8_t LDY()
+  {
     fetch();
     y = fetched;
     SetFlag(Z, y == 0x00u);
     SetFlag(N, y & 0x80u);
     return 1;
   }
-  uint8_t STA() {
+  uint8_t STA()
+  {
     write(addrAbs, a);
     return 0;
   }
-  uint8_t STX() {
+  uint8_t STX()
+  {
     write(addrAbs, x);
     return 0;
   }
-  uint8_t STY() {
+  uint8_t STY()
+  {
     write(addrAbs, y);
     return 0;
   }
-  uint8_t TAX() {
+  uint8_t TAX()
+  {
     x = a;
     SetFlag(Z, x == 0x00u);
     SetFlag(N, x & 0x80u);
     return 0;
   }
-  uint8_t TAY() {
+  uint8_t TAY()
+  {
     y = a;
     SetFlag(Z, y == 0x00u);
     SetFlag(N, y & 0x80u);
     return 0;
   }
-  uint8_t TXA() {
+  uint8_t TXA()
+  {
     a = x;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 0;
   }
-  uint8_t TYA() {
+  uint8_t TYA()
+  {
     a = y;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 0;
   }
-  uint8_t TSX() {
+  uint8_t TSX()
+  {
     x = stackPointer;
     SetFlag(Z, x == 0x00u);
     SetFlag(N, x & 0x80u);
     return 0;
   }
-  uint8_t TXS() {
+  uint8_t TXS()
+  {
     stackPointer = x;
     return 0;
   }
-  uint8_t PHA() {
+  uint8_t PHA()
+  {
     write(0x0100u + stackPointer, a);
     --stackPointer;
     return 0;
   }
-  uint8_t PHP() {
+  uint8_t PHP()
+  {
     write(0x0100u + stackPointer, status | B | U);
     SetFlag(B, 0);
     SetFlag(U, 0);
     --stackPointer;
     return 0;
   }
-  uint8_t PLA() {
+  uint8_t PLA()
+  {
     ++stackPointer;
     a = read(0x0100 + stackPointer);
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 0;
   }
-  uint8_t PLP() {
+  uint8_t PLP()
+  {
     ++stackPointer;
     status = read(0x0100 + stackPointer);
     SetFlag(U, 1);
     return 0;
   }
-  uint8_t AND() {
+  uint8_t AND()
+  {
     fetch();
     a &= fetched;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 1;
   }
-  uint8_t EOR() {
+  uint8_t EOR()
+  {
     fetch();
     a ^= fetched;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 1;
   }
-  uint8_t ORA() {
+  uint8_t ORA()
+  {
     fetch();
     a |= fetched;
     SetFlag(Z, a == 0x00u);
     SetFlag(N, a & 0x80u);
     return 1;
   }
-  uint8_t BIT() {
+  uint8_t BIT()
+  {
     fetch();
     uint16_t tmp = a & fetched;
     SetFlag(Z, (tmp & 0x00FFu) == 0);
@@ -319,7 +367,8 @@ public:
     SetFlag(V, fetched & (1 << 6));
     return 0;
   }
-  uint8_t ADC() {
+  uint8_t ADC()
+  {
     fetch();
     uint16_t tmp = (uint16_t)a + (uint16_t)fetched + (uint16_t)GetFlag(C);
     SetFlag(C, tmp > 255);
@@ -331,7 +380,8 @@ public:
     a = tmp & 0x00FF;
     return 1;
   }
-  uint8_t SBC() {
+  uint8_t SBC()
+  {
     fetch();
     uint16_t value = (uint16_t)fetched ^ 0x00FFu;
     uint16_t tmp = (uint16_t)a + value + (uint16_t)GetFlag(C);
@@ -344,7 +394,8 @@ public:
     a = tmp & 0x00FF;
     return 1;
   }
-  uint8_t CMP() {
+  uint8_t CMP()
+  {
     fetch();
     uint16_t tmp = (uint16_t)a - (uint16_t)fetched;
     SetFlag(C, a >= fetched);
@@ -352,7 +403,8 @@ public:
     SetFlag(N, tmp & 0x80u);
     return 1;
   }
-  uint8_t CPX() {
+  uint8_t CPX()
+  {
     fetch();
     uint16_t tmp = (uint16_t)x - (uint16_t)fetched;
     SetFlag(C, x >= fetched);
@@ -360,7 +412,8 @@ public:
     SetFlag(N, tmp & 0x80u);
     return 0;
   }
-  uint8_t CPY() {
+  uint8_t CPY()
+  {
     fetch();
     uint16_t tmp = (uint16_t)y - (uint16_t)fetched;
     SetFlag(C, y >= fetched);
@@ -368,7 +421,8 @@ public:
     SetFlag(N, tmp & 0x80u);
     return 0;
   }
-  uint8_t INC() {
+  uint8_t INC()
+  {
     fetch();
     uint16_t tmp = fetched + 1;
     write(addrAbs, tmp & 0x00FFu);
@@ -376,19 +430,22 @@ public:
     SetFlag(N, tmp & 0x80u);
     return 0;
   }
-  uint8_t INX() {
+  uint8_t INX()
+  {
     ++x;
     SetFlag(Z, (x & 0x00FFu) == 0);
     SetFlag(N, x & 0x80u);
     return 0;
   }
-  uint8_t INY() {
+  uint8_t INY()
+  {
     ++y;
     SetFlag(Z, (y & 0x00FFu) == 0);
     SetFlag(N, y & 0x80u);
     return 0;
   }
-  uint8_t DEC() {
+  uint8_t DEC()
+  {
     fetch();
     uint16_t tmp = fetched - 1;
     write(addrAbs, tmp & 0x00FFu);
@@ -396,75 +453,95 @@ public:
     SetFlag(N, tmp & 0x80u);
     return 0;
   }
-  uint8_t DEX() {
+  uint8_t DEX()
+  {
     --x;
     SetFlag(Z, x == 0);
     SetFlag(N, x & 0x80u);
     return 0;
   }
-  uint8_t DEY() {
+  uint8_t DEY()
+  {
     --y;
     SetFlag(Z, y == 0);
     SetFlag(N, y & 0x80u);
     return 0;
   }
-  uint8_t ASL() {
+  uint8_t ASL()
+  {
     fetch();
     uint16_t tmp = (uint16_t)fetched << 1;
     SetFlag(C, tmp & 0xFF00u);
     SetFlag(Z, (tmp & 0x00FFu) == 0);
     SetFlag(N, tmp & 0x80u);
-    if (lookup[opcode].addrmode == &m6502::IMP) {
+    if (lookup[opcode].addrmode == &m6502::IMP)
+    {
       a = tmp & 0x00FFu;
-    } else {
+    }
+    else
+    {
       write(addrAbs, tmp & 0x00FFu);
     }
     return 0;
   }
-  uint8_t LSR() {
+  uint8_t LSR()
+  {
     fetch();
     SetFlag(C, fetched & 0x0001u);
     uint16_t tmp = fetched >> 1;
     SetFlag(Z, (tmp & 0x00FFu) == 0);
     SetFlag(N, tmp & 0x80u);
-    if (lookup[opcode].addrmode == &m6502::IMP) {
+    if (lookup[opcode].addrmode == &m6502::IMP)
+    {
       a = tmp & 0x00FFu;
-    } else {
+    }
+    else
+    {
       write(addrAbs, tmp & 0x00FFu);
     }
     return 0;
   }
-  uint8_t ROL() {
+  uint8_t ROL()
+  {
     fetch();
     uint16_t tmp = (uint16_t)(fetched << 1) | GetFlag(C);
     SetFlag(C, tmp & 0xFF00u);
     SetFlag(Z, (tmp & 0x00FFu) == 0);
     SetFlag(N, tmp & 0x80u);
-    if (lookup[opcode].addrmode == &m6502::IMP) {
+    if (lookup[opcode].addrmode == &m6502::IMP)
+    {
       a = tmp & 0x00FFu;
-    } else {
+    }
+    else
+    {
       write(addrAbs, tmp & 0x00FFu);
     }
     return 0;
   }
-  uint8_t ROR() {
+  uint8_t ROR()
+  {
     fetch();
     uint16_t tmp = (uint16_t)(GetFlag(C) << 7) | (fetched >> 1);
     SetFlag(C, fetched & 0x01u);
     SetFlag(Z, (tmp & 0x00FFu) == 0);
     SetFlag(N, tmp & 0x80u);
-    if (lookup[opcode].addrmode == &m6502::IMP) {
+    if (lookup[opcode].addrmode == &m6502::IMP)
+    {
       a = tmp & 0x00FFu;
-    } else {
+    }
+    else
+    {
       write(addrAbs, tmp & 0x00FFu);
     }
     return 0;
   }
-  uint8_t JMP() {
+  uint8_t JMP()
+  {
     pc = addrAbs;
     return 0;
   }
-  uint8_t JSR() {
+  uint8_t JSR()
+  {
     --pc;
     write(0x0100u + stackPointer, (pc >> 8) & 0x00FFu);
     --stackPointer;
@@ -473,7 +550,8 @@ public:
     pc = addrAbs;
     return 0;
   }
-  uint8_t RTS() {
+  uint8_t RTS()
+  {
     ++stackPointer;
     pc = read(0x0100u + stackPointer);
     ++stackPointer;
@@ -482,123 +560,155 @@ public:
     ++pc;
     return 0;
   }
-  uint8_t BCC() {
-    if (GetFlag(C) == 0) {
+  uint8_t BCC()
+  {
+    if (GetFlag(C) == 0)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BCS() {
-    if (GetFlag(C) == 1) {
+  uint8_t BCS()
+  {
+    if (GetFlag(C) == 1)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BEQ() {
-    if (GetFlag(Z) == 1) {
+  uint8_t BEQ()
+  {
+    if (GetFlag(Z) == 1)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BMI() {
-    if (GetFlag(N) == 1) {
+  uint8_t BMI()
+  {
+    if (GetFlag(N) == 1)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BNE() {
-    if (GetFlag(Z) == 0) {
+  uint8_t BNE()
+  {
+    if (GetFlag(Z) == 0)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BPL() {
-    if (GetFlag(N) == 0) {
+  uint8_t BPL()
+  {
+    if (GetFlag(N) == 0)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BVC() {
-    if (GetFlag(V) == 0) {
+  uint8_t BVC()
+  {
+    if (GetFlag(V) == 0)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t BVS() {
-    if (GetFlag(V) == 1) {
+  uint8_t BVS()
+  {
+    if (GetFlag(V) == 1)
+    {
       ++cycles;
       addrAbs = pc + addrRel;
-      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u)) {
+      if ((addrAbs & 0xFF00u) != (pc & 0xFF00u))
+      {
         ++cycles;
       }
       pc = addrAbs;
     }
     return 0;
   }
-  uint8_t CLC() {
+  uint8_t CLC()
+  {
     SetFlag(C, false);
     return 0;
   }
-  uint8_t CLD() {
+  uint8_t CLD()
+  {
     SetFlag(D, false);
     return 0;
   }
-  uint8_t CLI() {
+  uint8_t CLI()
+  {
     SetFlag(I, false);
     return 0;
   }
-  uint8_t CLV() {
+  uint8_t CLV()
+  {
     SetFlag(V, false);
     return 0;
   }
-  uint8_t SEC() {
+  uint8_t SEC()
+  {
     SetFlag(C, true);
     return 0;
   }
-  uint8_t SED() {
+  uint8_t SED()
+  {
     SetFlag(D, true);
     return 0;
   }
-  uint8_t SEI() {
+  uint8_t SEI()
+  {
     SetFlag(I, true);
     return 0;
   }
-  uint8_t BRK() {
+  uint8_t BRK()
+  {
     pc++;
 
     SetFlag(I, 1);
@@ -615,9 +725,11 @@ public:
     pc = (uint16_t)read(0xFFFE) | ((uint16_t)read(0xFFFF) << 8);
     return 0;
   }
-  uint8_t NOP() {
+  uint8_t NOP()
+  {
     // TODO: Not completed
-    switch (opcode) {
+    switch (opcode)
+    {
     case 0x1C:
     case 0x3C:
     case 0x5C:
@@ -629,7 +741,8 @@ public:
     }
     return 0;
   }
-  uint8_t RTI() {
+  uint8_t RTI()
+  {
     ++stackPointer;
     status = read(0x0100u + stackPointer);
     status &= ~B;
@@ -671,8 +784,10 @@ public:
 private:
   std::unique_ptr<Bus> bus{nullptr};
 
-  uint8_t fetch() {
-    if (lookup[opcode].addrmode != &m6502::IMP) {
+  uint8_t fetch()
+  {
+    if (lookup[opcode].addrmode != &m6502::IMP)
+    {
       fetched = read(addrAbs);
     }
     return fetched;
@@ -689,15 +804,20 @@ private:
 
   // Access status register
   uint8_t GetFlag(FLAGS_6502 flag) { return ((status & flag) > 0) ? 1 : 0; }
-  void SetFlag(FLAGS_6502 flag, bool v) {
-    if (v) {
+  void SetFlag(FLAGS_6502 flag, bool v)
+  {
+    if (v)
+    {
       status |= flag;
-    } else {
+    }
+    else
+    {
       status &= ~flag;
     }
   }
 
-  struct INSTRUCTION {
+  struct INSTRUCTION
+  {
     std::string name;
     uint8_t (m6502::*operate)(void){nullptr};
     uint8_t (m6502::*addrmode)(void){nullptr};

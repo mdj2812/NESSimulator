@@ -7,41 +7,50 @@
 
 #include "Mapper_000.h"
 
-class Catridge {
+class Catridge
+{
 public:
   Catridge(const std::string &sFileName);
   ~Catridge() {}
 
   bool ImageValid() const { return bImageValid; }
 
-  bool cpuRead(uint16_t addr, uint8_t &data) const {
+  bool cpuRead(uint16_t addr, uint8_t &data) const
+  {
     uint32_t mappedAddr = 0;
-    if (pMapper->cpuMapRead(addr, mappedAddr)) {
+    if (pMapper->cpuMapRead(addr, mappedAddr))
+    {
       data = vPRGMemory[mappedAddr];
       return true;
     }
     return false;
   }
-  bool cpuWrite(uint16_t addr, uint8_t data) {
+  bool cpuWrite(uint16_t addr, uint8_t data)
+  {
     uint32_t mappedAddr = 0;
-    if (pMapper->cpuMapWrite(addr, mappedAddr)) {
+    if (pMapper->cpuMapWrite(addr, mappedAddr))
+    {
       vPRGMemory[mappedAddr] = data;
       return true;
     }
     return false;
   }
 
-  bool ppuRead(uint16_t addr, uint8_t &data) const {
+  bool ppuRead(uint16_t addr, uint8_t &data) const
+  {
     uint32_t mappedAddr = 0;
-    if (pMapper->ppuMapRead(addr, mappedAddr)) {
+    if (pMapper->ppuMapRead(addr, mappedAddr))
+    {
       data = vCHRMemory[mappedAddr];
       return true;
     }
     return false;
   }
-  bool ppuWrite(uint16_t addr, uint8_t data) {
+  bool ppuWrite(uint16_t addr, uint8_t data)
+  {
     uint32_t mappedAddr = 0;
-    if (pMapper->ppuMapWrite(addr, mappedAddr)) {
+    if (pMapper->ppuMapWrite(addr, mappedAddr))
+    {
       vCHRMemory[mappedAddr] = data;
       return true;
     }

@@ -7,7 +7,8 @@
 
 using namespace std;
 
-class DemoM6502 : public olc::PixelGameEngine {
+class DemoM6502 : public olc::PixelGameEngine
+{
 public:
   DemoM6502() { sAppName = "m6502 Demonstration"; }
 
@@ -20,18 +21,22 @@ public:
 
   uint8_t nSelectedPalette{0x00u};
 
-  string hex(uint32_t n, uint8_t d) {
+  string hex(uint32_t n, uint8_t d)
+  {
     string s(d, '0');
     for (int i = d - 1; i >= 0; i--, n >>= 4)
       s[i] = "0123456789ABCDEF"[n & 0xF];
     return s;
   };
 
-  void DrawRam(int x, int y, uint16_t nAddr, int nRows, int nColumns) {
+  void DrawRam(int x, int y, uint16_t nAddr, int nRows, int nColumns)
+  {
     int nRamX = x, nRamY = y;
-    for (int row = 0; row < nRows; row++) {
+    for (int row = 0; row < nRows; row++)
+    {
       string sOffset = "$" + hex(nAddr, 4) + ":";
-      for (int col = 0; col < nColumns; col++) {
+      for (int col = 0; col < nColumns; col++)
+      {
         sOffset += " " + hex(nes.cpuRead(nAddr, true), 2);
         nAddr += 1;
       }
@@ -40,7 +45,8 @@ public:
     }
   }
 
-  void DrawCpu(int x, int y) {
+  void DrawCpu(int x, int y)
+  {
     std::string status = "STATUS: ";
     DrawString(x, y, "STATUS:", olc::WHITE);
     DrawString(x + 64, y, "N",
@@ -72,14 +78,18 @@ public:
     DrawString(x, y + 50, "Stack P: $" + hex(nes.cpu.stackPointer, 4));
   }
 
-  void DrawCode(int x, int y, int nLines) {
+  void DrawCode(int x, int y, int nLines)
+  {
     auto it_a = mapAsm.find(nes.cpu.pc);
     int nLineY = (nLines >> 1) * 10 + y;
-    if (it_a != mapAsm.end()) {
+    if (it_a != mapAsm.end())
+    {
       DrawString(x, nLineY, (*it_a).second, olc::CYAN);
-      while (nLineY < (nLines * 10) + y) {
+      while (nLineY < (nLines * 10) + y)
+      {
         nLineY += 10;
-        if (++it_a != mapAsm.end()) {
+        if (++it_a != mapAsm.end())
+        {
           DrawString(x, nLineY, (*it_a).second);
         }
       }
@@ -87,19 +97,24 @@ public:
 
     it_a = mapAsm.find(nes.cpu.pc);
     nLineY = (nLines >> 1) * 10 + y;
-    if (it_a != mapAsm.end()) {
-      while (nLineY > y) {
+    if (it_a != mapAsm.end())
+    {
+      while (nLineY > y)
+      {
         nLineY -= 10;
-        if (--it_a != mapAsm.end()) {
+        if (--it_a != mapAsm.end())
+        {
           DrawString(x, nLineY, (*it_a).second);
         }
       }
     }
   }
 
-  bool OnUserCreate() {
+  bool OnUserCreate()
+  {
     cart = make_shared<Catridge>("nestest.nes");
-    if (!cart->ImageValid()) {
+    if (!cart->ImageValid())
+    {
       return false;
     }
     nes.insertCartridge(cart);
@@ -108,51 +123,68 @@ public:
     return true;
   }
 
-  bool OnUserUpdate(float fElapsedTime) {
+  bool OnUserUpdate(float fElapsedTime)
+  {
     Clear(olc::DARK_BLUE);
 
-    if (GetKey(olc::Key::R).bPressed) {
+    if (GetKey(olc::Key::R).bPressed)
+    {
       nes.cpu.reset();
     }
-    if (GetKey(olc::Key::SPACE).bPressed) {
+    if (GetKey(olc::Key::SPACE).bPressed)
+    {
       bEmulationRun = !bEmulationRun;
     }
-    if (GetKey(olc::Key::P).bPressed) {
+    if (GetKey(olc::Key::P).bPressed)
+    {
       (++nSelectedPalette) &= 0x07u;
     }
 
-    if (bEmulationRun) {
-      if (fResidualTime > 0.0f) {
+    if (bEmulationRun)
+    {
+      if (fResidualTime > 0.0f)
+      {
         fResidualTime -= fElapsedTime;
-      } else {
+      }
+      else
+      {
         // 60 Hz
         fResidualTime += (1.0f / 60.0f) - fElapsedTime;
-        do {
+        do
+        {
           nes.clock();
         } while (!nes.ppu.frameComplete);
         nes.ppu.frameComplete = false;
       }
-    } else {
+    }
+    else
+    {
       // emulate code step-by-step
-      if (GetKey(olc::Key::C).bPressed) {
-        do {
+      if (GetKey(olc::Key::C).bPressed)
+      {
+        do
+        {
           nes.cpu.clock();
         } while (!nes.cpu.complete());
 
         // Drain remain CPU clocks
-        do {
+        do
+        {
           nes.cpu.clock();
         } while (nes.cpu.complete());
       }
 
       // emulate one whole frame
-      if (GetKey(olc::Key::F).bPressed) {
-        do {
+      if (GetKey(olc::Key::F).bPressed)
+      {
+        do
+        {
           nes.clock();
         } while (!nes.ppu.frameComplete);
 
         // Use residual clock cycles to complete current instruction
-        do {
+        do
+        {
           nes.clock();
         } while (!nes.cpu.complete());
         nes.ppu.frameComplete = false;
@@ -164,8 +196,10 @@ public:
     DrawCode(516, 72, 26);
 
     constexpr int nSwatchSize = 6;
-    for (int p = 0; p < 8; p++) {
-      for (int s = 0; s < 4; s++) {
+    for (int p = 0; p < 8; p++)
+    {
+      for (int s = 0; s < 4; s++)
+      {
         FillRect(516 + p * (nSwatchSize * 5) + s * nSwatchSize, 340,
                  nSwatchSize, nSwatchSize,
                  nes.ppu.GetColourFromPaletteRam(p, s));
@@ -184,7 +218,8 @@ public:
   }
 };
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
   DemoM6502 demo;
   demo.Construct(780, 480, 2, 2);
   demo.Start();

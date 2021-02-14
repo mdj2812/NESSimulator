@@ -1,6 +1,7 @@
 #include "m2C02.h"
 
-m2C02::m2C02() {
+m2C02::m2C02()
+{
   // refer to https://wiki.nesdev.com/w/index.php/PPU_palettes
   palScreen[0x00] = olc::Pixel(84, 84, 84);
   palScreen[0x01] = olc::Pixel(0, 30, 116);
