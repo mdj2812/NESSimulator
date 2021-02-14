@@ -6,7 +6,7 @@ The simulator is written in modern C++. This would be an interesting practice to
 
 ## Demo
 
-There is a little demo for processor 6502. It is based on [olcPixelGameEngine](https://github.com/OneLoneCoder/olcPixelGameEngine) -- another project from OneLoneCoder. On the right side, it prints out all registers, status flags and stack pointer. On the left side, it looks like an old fashioned TV with no-signal.
+There is a little demo for processor 6502. It is based on [olcPixelGameEngine](https://github.com/OneLoneCoder/olcPixelGameEngine) -- another project from OneLoneCoder. On the right side, it prints out all registers, status flags and stack pointer. On the left side, it shows the graphic of game.
 
 ## Tests
 
